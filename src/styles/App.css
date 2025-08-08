@@ -118,7 +118,11 @@
   
   .app-grid__right {
     position: static;
-    order: -1; /* Show quote first on mobile */
+    order: 1; /* Show quote last on mobile for better UX */
+  }
+  
+  .app-grid__left {
+    order: 0; /* Ensure input forms come first */
   }
   
   .app-container {

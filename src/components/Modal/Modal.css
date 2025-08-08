@@ -112,13 +112,16 @@
 @media (max-width: 768px) {
   .modal-overlay {
     padding: 0.5rem;
-    align-items: flex-end;
+    align-items: flex-start;
+    padding-top: 1rem;
   }
   
   .modal {
-    max-height: 95vh;
-    border-radius: 12px 12px 0 0;
+    max-height: 92vh;
+    border-radius: 12px;
     animation: modal-slide-up 0.2s ease-out;
+    margin-top: auto;
+    margin-bottom: auto;
   }
   
   .modal--small,
@@ -132,6 +135,7 @@
   .modal__header {
     padding: 1rem 1rem 0;
     margin-bottom: 1rem;
+    flex-shrink: 0;
   }
   
   .modal__title {
@@ -140,6 +144,36 @@
   
   .modal__body {
     padding: 0 1rem 1rem;
+    overflow-y: auto;
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-overlay {
+    padding: 0.25rem;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+  
+  .modal {
+    max-height: 95vh;
+    height: 100%;
+    border-radius: 8px;
+    margin: 0;
+  }
+  
+  .modal__header {
+    padding: 0.75rem 0.75rem 0;
+    margin-bottom: 0.75rem;
+  }
+  
+  .modal__title {
+    font-size: 1.125rem;
+  }
+  
+  .modal__body {
+    padding: 0 0.75rem 0.75rem;
   }
 }
 
