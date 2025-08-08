@@ -9,9 +9,12 @@ This is a Car Repair Shop Quote Application - a pure frontend React application 
 ## Architecture Overview
 
 ### Technology Stack
-- **Frontend**: React with Redux for state management
-- **Styling**: Native CSS with responsive design
+- **Frontend**: React 18+ with TypeScript
+- **Build Tool**: Vite for fast development and optimized builds
+- **State Management**: Redux Toolkit with TypeScript
+- **Styling**: Native CSS with CSS modules and responsive design
 - **Data Storage**: IndexedDB for persistent storage (no localStorage)
+- **Type Checking**: TypeScript for type safety and better DX
 - **Build Target**: Pure frontend application for static hosting
 - **Browser Support**: Modern browsers (Chrome 70+, Firefox 65+, Safari 12+)
 
@@ -29,20 +32,24 @@ src/
 │   ├── CustomerInfoForm/
 │   ├── ServiceSelection/
 │   └── QuoteDisplay/
-├── store/                   # Redux state management
-│   ├── slices/             # Redux Toolkit slices
-│   ├── actions/            # Action creators
-│   └── index.js            # Store configuration
+├── store/                   # Redux Toolkit state management
+│   ├── slices/             # RTK slices with TypeScript
+│   ├── hooks.ts            # Typed Redux hooks
+│   └── index.ts            # Store configuration
 ├── utils/                   # Core utilities
-│   ├── indexedDB.js        # IndexedDB operations and data persistence
-│   ├── dataExport.js       # Import/export functionality
-│   ├── validation.js       # Input validation utilities
-│   └── browserSupport.js   # Browser compatibility checks
+│   ├── indexedDB.ts        # IndexedDB operations and data persistence
+│   ├── dataExport.ts       # Import/export functionality
+│   ├── validation.ts       # Input validation utilities
+│   └── browserSupport.ts   # Browser compatibility checks
+├── types/                   # TypeScript type definitions
+│   ├── customer.ts         # Customer data types
+│   ├── service.ts          # Service data types
+│   └── common.ts           # Common/shared types
 ├── constants/              # Application constants
 ├── styles/                 # Global styles and themes
 └── data/                   # Default configuration data
-    ├── defaultServices.js     # Preset service catalog
-    └── defaultCustomerFields.js # Default customer form fields
+    ├── defaultServices.ts     # Preset service catalog
+    └── defaultCustomerFields.ts # Default customer form fields
 ```
 
 ## Key Features & Data Models
@@ -111,16 +118,18 @@ src/
 ## Development Guidelines
 
 ### Component Development
-- Use functional components with React Hooks
+- Use functional components with React Hooks and TypeScript
 - Implement React.memo for performance optimization
 - Follow single responsibility principle for component design
-- Use PropTypes for type checking
+- Use TypeScript interfaces and types for comprehensive type checking
+- Define proper component props interfaces
 
 ### State Management
-- Use Redux Toolkit for state management
-- Implement proper action creators and reducers
+- Use Redux Toolkit with TypeScript for state management
+- Define typed slices with createSlice from RTK
+- Use typed hooks (useAppSelector, useAppDispatch)
 - Keep business logic in Redux, UI logic in components
-- Use useSelector and useDispatch hooks
+- Define proper TypeScript interfaces for all state shapes
 
 ### Styling Approach
 - Native CSS with CSS modules for component-specific styles

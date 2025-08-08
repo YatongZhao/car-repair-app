@@ -37,9 +37,12 @@
 - ❌ **不涉及：** 后端数据库、服务器、用户认证
 
 ### 2.2 技术选型
-- **前端技术：** HTML5 + CSS3 + JavaScript (ES6+)
-- **样式框架：** 原生CSS，响应式设计
-- **数据存储：** JavaScript内存对象（非localStorage）
+- **前端技术：** React 18+ + TypeScript
+- **构建工具：** Vite（快速开发和构建优化）
+- **状态管理：** Redux Toolkit + TypeScript
+- **样式框架：** 原生CSS + CSS Modules，响应式设计
+- **数据存储：** IndexedDB（非localStorage）
+- **类型检查：** TypeScript（提供类型安全和更好的开发体验）
 - **兼容性：** 现代浏览器（Chrome 70+, Firefox 65+, Safari 12+）
 
 ### 2.3 性能要求
@@ -542,24 +545,25 @@ if (!window.indexedDB) {
 - **单一职责：** 每个组件只负责一个功能
 - **可复用性：** 通用组件支持props配置
 - **性能优化：** 使用React.memo避免不必要渲染
-- **类型安全：** 使用PropTypes进行类型检查
+- **类型安全：** 使用TypeScript接口和类型进行类型检查
 
 ### 9.2 Hooks使用规范
-```javascript
-// 推荐使用的Hooks
-- useSelector() - 获取Redux状态
-- useDispatch() - 分发Redux Actions
-- useState() - 组件本地状态
+```typescript
+// 推荐使用的Hooks（TypeScript版本）
+- useAppSelector() - 获取Redux状态（类型安全）
+- useAppDispatch() - 分发Redux Actions（类型安全）
+- useState<T>() - 组件本地状态（带类型参数）
 - useEffect() - 副作用处理
 - useCallback() - 函数缓存优化
 - useMemo() - 计算结果缓存
 ```
 
 ### 9.3 组件命名规范
-- **组件文件：** PascalCase (CustomerInfoForm.jsx)
+- **组件文件：** PascalCase (CustomerInfoForm.tsx)
 - **样式文件：** kebab-case (customer-info-form.module.css)
-- **常量文件：** UPPER_CASE (SERVICE_TYPES.js)
-- **工具函数：** camelCase (calculateTotal.js)
+- **类型文件：** camelCase (customer.ts, service.ts)
+- **常量文件：** UPPER_CASE (SERVICE_TYPES.ts)
+- **工具函数：** camelCase (calculateTotal.ts)
 
 ### 9.4 文件目录结构
 ```
@@ -574,20 +578,24 @@ src/
 │   ├── CustomerInfoForm/
 │   ├── ServiceSelection/
 │   └── QuoteDisplay/
-├── store/              # Redux相关
-│   ├── slices/         # Redux Toolkit slices
-│   ├── actions/        # Action creators
-│   └── index.js        # Store配置
+├── store/              # Redux Toolkit相关
+│   ├── slices/         # RTK slices (TypeScript)
+│   ├── hooks.ts        # 类型安全的Redux hooks
+│   └── index.ts        # Store配置
+├── types/              # TypeScript类型定义
+│   ├── customer.ts     # 客户数据类型
+│   ├── service.ts      # 服务数据类型
+│   └── common.ts       # 通用类型
 ├── utils/              # 工具函数
-│   ├── indexedDB.js    # IndexedDB操作
-│   ├── dataExport.js   # 数据导入导出
-│   ├── validation.js   # 数据验证
-│   └── browserSupport.js # 浏览器支持检测
+│   ├── indexedDB.ts    # IndexedDB操作
+│   ├── dataExport.ts   # 数据导入导出
+│   ├── validation.ts   # 数据验证
+│   └── browserSupport.ts # 浏览器支持检测
 ├── constants/          # 常量定义
 ├── styles/             # 全局样式
 └── data/               # 默认数据配置
-    ├── defaultServices.js     # 预设服务数据
-    └── defaultCustomerFields.js # 默认客户字段配置
+    ├── defaultServices.ts     # 预设服务数据
+    └── defaultCustomerFields.ts # 默认客户字段配置
 ```
 
 ---
