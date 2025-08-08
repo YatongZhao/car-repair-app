@@ -1,0 +1,140 @@
+.customer-form {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  height: fit-content;
+}
+
+.customer-form__header {
+  margin-bottom: 1.5rem;
+}
+
+.customer-form__title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a202c;
+  margin: 0 0 0.5rem 0;
+}
+
+.customer-form__subtitle {
+  color: #718096;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.customer-form__content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.customer-form__section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.customer-form__section-title {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #2d3748;
+  margin: 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.customer-form__grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+/* Select styling to match input */
+.customer-form select.input {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1rem;
+  appearance: none;
+  padding-right: 2.5rem;
+  cursor: pointer;
+}
+
+.customer-form select.input:focus {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23667eea' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+}
+
+/* Responsive grid */
+@media (min-width: 640px) {
+  .customer-form__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 1024px) {
+  .customer-form {
+    padding: 2rem;
+  }
+  
+  .customer-form__header {
+    margin-bottom: 2rem;
+  }
+  
+  .customer-form__content {
+    gap: 2.5rem;
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .customer-form {
+    padding: 1rem;
+    border-radius: 8px;
+  }
+  
+  .customer-form__title {
+    font-size: 1.25rem;
+  }
+  
+  .customer-form__grid {
+    gap: 0.75rem;
+  }
+  
+  .customer-form__section {
+    gap: 0.75rem;
+  }
+  
+  .customer-form__content {
+    gap: 1.5rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  .customer-form {
+    box-shadow: none;
+    border: 1px solid #e2e8f0;
+  }
+}
+
+/* Focus management */
+.customer-form__section:focus-within .customer-form__section-title {
+  color: #667eea;
+}
+
+/* Animation for dynamic fields */
+.customer-form__grid .input-group {
+  animation: slide-in 0.2s ease-out;
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
