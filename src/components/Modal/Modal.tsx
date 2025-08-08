@@ -1,7 +1,6 @@
-import React, { useEffect } from 'react'
-import { createPortal } from 'react-dom'
-import Button from '../Button'
-import './Modal.css'
+import React from 'react'
+import { Modal as AntModal } from 'antd'
+import { CloseOutlined } from '@ant-design/icons'
 
 interface ModalProps {
   isOpen: boolean
@@ -26,66 +25,48 @@ const Modal: React.FC<ModalProps> = ({
   closeOnEsc = true,
   className = '',
 }) => {
-  useEffect(() => {
-    if (!isOpen || !closeOnEsc) return
-
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose()
-      }
-    }
-
-    document.addEventListener('keydown', handleEsc)
-    return () => document.removeEventListener('keydown', handleEsc)
-  }, [isOpen, closeOnEsc, onClose])
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
-
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [isOpen])
-
-  if (!isOpen) return null
-
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget && closeOnOverlayClick) {
-      onClose()
+  const getWidth = () => {
+    switch (size) {
+      case 'small':
+        return 400
+      case 'medium':
+        return 600
+      case 'large':
+        return 800
+      case 'xl':
+        return 1200
+      default:
+        return 600
     }
   }
 
-  const modalContent = (
-    <div className="modal-overlay" onClick={handleOverlayClick}>
-      <div className={`modal modal--${size} ${className}`}>
-        {(title || showCloseButton) && (
-          <div className="modal__header">
-            {title && <h2 className="modal__title">{title}</h2>}
-            {showCloseButton && (
-              <Button
-                variant="secondary"
-                size="small"
-                onClick={onClose}
-                className="modal__close-button"
-              >
-                ✕
-              </Button>
-            )}
-          </div>
-        )}
-        
-        <div className="modal__body">
-          {children}
-        </div>
-      </div>
-    </div>
+  return (
+    <AntModal
+      open={isOpen}
+      onCancel={onClose}
+      title={title}
+      footer={null}
+      width={getWidth()}
+      centered
+      maskClosable={closeOnOverlayClick}
+      keyboard={closeOnEsc}
+      className={className}
+      closeIcon={showCloseButton ? <CloseOutlined /> : null}
+      styles={{
+        body: {
+          maxHeight: '70vh',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          padding: '16px'
+        }
+      }}
+      style={{
+        maxWidth: '95vw'
+      }}
+    >
+      {children}
+    </AntModal>
   )
-
-  return createPortal(modalContent, document.body)
 }
 
 export default Modal

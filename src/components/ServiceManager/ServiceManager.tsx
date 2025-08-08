@@ -1,4 +1,29 @@
 import React, { useState } from 'react'
+import { 
+  Tabs, 
+  Button, 
+  Input, 
+  Form, 
+  Card, 
+  Space, 
+  Typography, 
+  Popconfirm, 
+  message,
+  Upload,
+  Row,
+  Col,
+  Tag,
+  InputNumber
+} from 'antd'
+import type { UploadProps } from 'antd'
+import { 
+  EditOutlined, 
+  DeleteOutlined, 
+  PlusOutlined, 
+  DownloadOutlined, 
+  UploadOutlined,
+  ReloadOutlined
+} from '@ant-design/icons'
 import { useAppSelector, useAppDispatch } from '../../store/hooks'
 import { store } from '../../store'
 import { 
@@ -13,10 +38,10 @@ import {
 import { dbManager } from '../../utils/indexedDB'
 import { defaultServices } from '../../data/defaultServices'
 import { ServiceItem, ServiceCategory } from '../../types/service'
-import Button from '../Button'
-import Input from '../Input'
 import Modal from '../Modal'
-import './ServiceManager.css'
+
+const { Title, Text, Paragraph } = Typography
+const { TextArea } = Input
 
 interface ServiceManagerProps {
   isOpen: boolean
@@ -30,545 +55,554 @@ const ServiceManager: React.FC<ServiceManagerProps> = ({ isOpen, onClose }) => {
   const dispatch = useAppDispatch()
   const { serviceDatabase } = useAppSelector((state) => state.service)
   
-  const [activeTab, setActiveTab] = useState<'services' | 'categories' | 'data'>('services')
+  const [activeTab, setActiveTab] = useState('services')
   const [editingItem, setEditingItem] = useState<EditingItem | null>(null)
   const [editingCategory, setEditingCategory] = useState<EditingCategory | null>(null)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<{
-    type: 'item' | 'category'
-    id: string
-    categoryId?: string
-    name: string
-  } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [form] = Form.useForm()
+  const [categoryForm] = Form.useForm()
 
   // Get sorted categories and items
   const categories = Object.values(serviceDatabase).sort((a, b) => a.order - b.order)
 
-  const handleSaveItem = async () => {
+  const handleSaveItem = async (values: any) => {
     if (!editingItem) return
 
-    dispatch(updateServiceItem({
-      categoryId: editingItem.categoryId,
-      itemId: editingItem.id,
-      updates: {
-        name: editingItem.name,
-        price: editingItem.price,
-        description: editingItem.description,
-      }
-    }))
+    if (editingItem.id.startsWith('item-')) {
+      // Add new item
+      dispatch(addServiceItem({
+        categoryId: editingItem.categoryId,
+        item: {
+          id: editingItem.id,
+          name: values.name,
+          price: values.price,
+          description: values.description || '',
+          isCustom: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }
+      }))
+      message.success('新服务项目已添加')
+    } else {
+      // Update existing item
+      dispatch(updateServiceItem({
+        categoryId: editingItem.categoryId,
+        itemId: editingItem.id,
+        updates: {
+          name: values.name,
+          price: values.price,
+          description: values.description || '',
+        }
+      }))
+      message.success('服务项目已更新')
+    }
 
-    // Get updated state and save to IndexedDB
+    // Save to IndexedDB
     setTimeout(async () => {
       const updatedState = store.getState()
       await dbManager.saveServiceDatabase(updatedState.service.serviceDatabase)
     }, 0)
-    
+
     setEditingItem(null)
+    form.resetFields()
   }
 
-  const handleSaveCategory = async () => {
+  const handleSaveCategory = async (values: any) => {
     if (!editingCategory) return
 
-    if (editingCategory.isCustom) {
-      // Adding new category
+    if (editingCategory.id === 'new') {
+      // Add new category
+      const newId = `category-${Date.now()}`
       dispatch(addServiceCategory({
-        ...editingCategory,
-        id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: newId,
+        name: values.name,
+        order: categories.length,
+        isCustom: true,
         items: {},
         createdAt: new Date(),
         updatedAt: new Date(),
       }))
+      message.success('新分类已添加')
     }
 
-    // Get updated state and save to IndexedDB
     setTimeout(async () => {
       const updatedState = store.getState()
       await dbManager.saveServiceDatabase(updatedState.service.serviceDatabase)
     }, 0)
-    
+
     setEditingCategory(null)
+    categoryForm.resetFields()
   }
 
-  const handleDeleteItem = async () => {
-    if (!showDeleteConfirm || showDeleteConfirm.type !== 'item') return
-
-    dispatch(removeServiceItem({
-      categoryId: showDeleteConfirm.categoryId!,
-      itemId: showDeleteConfirm.id
-    }))
-
-    // Get updated state and save to IndexedDB
+  const handleDeleteItem = async (categoryId: string, itemId: string) => {
+    dispatch(removeServiceItem({ categoryId, itemId }))
+    
     setTimeout(async () => {
       const updatedState = store.getState()
       await dbManager.saveServiceDatabase(updatedState.service.serviceDatabase)
     }, 0)
     
-    setShowDeleteConfirm(null)
+    message.success('服务项目已删除')
   }
 
-  const handleDeleteCategory = async () => {
-    if (!showDeleteConfirm || showDeleteConfirm.type !== 'category') return
-
-    dispatch(removeServiceCategory(showDeleteConfirm.id))
-
-    // Get updated state and save to IndexedDB
+  const handleDeleteCategory = async (categoryId: string) => {
+    dispatch(removeServiceCategory(categoryId))
+    
     setTimeout(async () => {
       const updatedState = store.getState()
       await dbManager.saveServiceDatabase(updatedState.service.serviceDatabase)
     }, 0)
     
-    setShowDeleteConfirm(null)
+    message.success('服务分类已删除')
   }
 
   const handleAddNewItem = (categoryId: string) => {
+    const newId = `item-${Date.now()}`
     const newItem: EditingItem = {
-      id: `new_${Date.now()}`,
+      id: newId,
       name: '',
       price: 0,
       description: '',
       isCustom: true,
+      categoryId,
       createdAt: new Date(),
       updatedAt: new Date(),
-      categoryId,
     }
     setEditingItem(newItem)
+    form.setFieldsValue({
+      name: '',
+      price: 0,
+      description: ''
+    })
   }
 
-  const handleSaveNewItem = async () => {
-    if (!editingItem || !editingItem.name.trim()) return
-
-    const newItem: ServiceItem = {
-      id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      name: editingItem.name.trim(),
-      price: editingItem.price,
-      description: editingItem.description || '',
+  const handleAddNewCategory = () => {
+    const newCategory: EditingCategory = {
+      id: 'new',
+      name: '',
+      order: categories.length,
       isCustom: true,
+      items: {},
       createdAt: new Date(),
       updatedAt: new Date(),
     }
-
-    dispatch(addServiceItem({
-      categoryId: editingItem.categoryId,
-      item: newItem
-    }))
-
-    // Get updated state and save to IndexedDB
-    setTimeout(async () => {
-      const updatedState = store.getState()
-      await dbManager.saveServiceDatabase(updatedState.service.serviceDatabase)
-    }, 0)
-    
-    setEditingItem(null)
+    setEditingCategory(newCategory)
+    categoryForm.setFieldsValue({
+      name: '',
+      description: ''
+    })
   }
 
-  const handleExportData = async () => {
-    try {
-      const exportData = await dbManager.exportData()
-      const blob = new Blob([exportData], { type: 'application/json' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `car-repair-services-${new Date().toISOString().split('T')[0]}.json`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-    } catch (error) {
-      console.error('Export failed:', error)
-    }
+  const handleEditItem = (item: ServiceItem, categoryId: string) => {
+    const editingItem: EditingItem = { ...item, categoryId }
+    setEditingItem(editingItem)
+    form.setFieldsValue({
+      name: item.name,
+      price: item.price,
+      description: item.description
+    })
   }
 
-  const handleImportData = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    setIsLoading(true)
-    try {
-      const text = await file.text()
-      const success = await dbManager.importData(text)
-      
-      if (success) {
-        // Reload service database from IndexedDB
-        const newServiceDatabase = await dbManager.loadServiceDatabase()
-        if (newServiceDatabase) {
-          dispatch(setServiceDatabase(newServiceDatabase))
-        }
-        alert('数据导入成功！')
-      } else {
-        alert('数据导入失败，请检查文件格式。')
-      }
-    } catch (error) {
-      console.error('Import failed:', error)
-      alert('数据导入失败，请检查文件格式。')
-    } finally {
-      setIsLoading(false)
-      event.target.value = '' // Reset file input
-    }
+  const handleExportData = () => {
+    const dataStr = JSON.stringify(serviceDatabase, null, 2)
+    const dataBlob = new Blob([dataStr], { type: 'application/json' })
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `service-data-${new Date().toISOString().split('T')[0]}.json`
+    link.click()
+    URL.revokeObjectURL(url)
+    message.success('数据已导出')
   }
+
 
   const handleResetToDefault = async () => {
-    if (!confirm('确定要重置为默认服务配置吗？这将删除所有自定义修改。')) {
-      return
+    setIsLoading(true)
+    try {
+      dispatch(resetToDefaultServices(defaultServices))
+      await dbManager.saveServiceDatabase(defaultServices)
+      const updatedState = store.getState()
+      await dbManager.saveServiceDatabase(updatedState.service.serviceDatabase)
+      message.success('已重置为默认配置')
+    } catch (error) {
+      message.error('重置失败，请重试')
+    } finally {
+      setIsLoading(false)
     }
-
-    dispatch(resetToDefaultServices(defaultServices))
-    await dbManager.saveServiceDatabase(defaultServices)
-    alert('已重置为默认配置。')
   }
 
-  if (!isOpen) return null
+  const uploadProps: UploadProps = {
+    name: 'file',
+    accept: '.json',
+    showUploadList: false,
+    beforeUpload: (file) => {
+      const reader = new FileReader()
+      reader.onload = async (e) => {
+        try {
+          const result = e.target?.result
+          if (typeof result === 'string') {
+            const importedData = JSON.parse(result)
+            dispatch(setServiceDatabase(importedData))
+            await dbManager.saveServiceDatabase(importedData)
+            message.success('数据导入成功')
+          }
+        } catch (error) {
+          message.error('数据格式错误，请检查文件内容')
+        }
+      }
+      reader.readAsText(file)
+      return false // 阻止默认上传行为
+    }
+  }
 
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="服务项目管理"
-      size="xl"
-    >
-      <div className="service-manager">
-        {/* Tabs */}
-        <div className="service-manager__tabs">
-          <button
-            className={`tab ${activeTab === 'services' ? 'tab--active' : ''}`}
-            onClick={() => setActiveTab('services')}
-          >
-            服务项目
-          </button>
-          <button
-            className={`tab ${activeTab === 'categories' ? 'tab--active' : ''}`}
-            onClick={() => setActiveTab('categories')}
-          >
-            服务分类
-          </button>
-          <button
-            className={`tab ${activeTab === 'data' ? 'tab--active' : ''}`}
-            onClick={() => setActiveTab('data')}
-          >
-            数据管理
-          </button>
-        </div>
-
-        {/* Services Tab */}
-        {activeTab === 'services' && (
-          <div className="service-manager__content">
-            <div className="service-manager__header">
-              <h3>服务项目管理</h3>
-              <p className="service-manager__description">
-                管理各分类下的服务项目，可以编辑价格、描述或添加新服务。
-              </p>
-            </div>
-
-            <div className="service-categories-list">
-              {categories.map((category) => (
-                <div key={category.id} className="category-section">
-                  <div className="category-section__header">
-                    <h4>{category.name}</h4>
-                    <Button
-                      variant="secondary"
-                      size="small"
-                      onClick={() => handleAddNewItem(category.id)}
-                    >
-                      + 添加服务
-                    </Button>
-                  </div>
-
-                  <div className="service-items-grid">
-                    {Object.values(category.items).map((item) => (
-                      <div key={item.id} className="service-item-card">
-                        <div className="service-item-card__info">
-                          <h5 className="service-item-card__name">
-                            {item.name}
-                            {item.isCustom && (
-                              <span className="custom-tag">自定义</span>
-                            )}
-                          </h5>
-                          <p className="service-item-card__description">
-                            {item.description}
-                          </p>
-                          <div className="service-item-card__price">
-                            ¥{item.price.toFixed(2)}
-                          </div>
-                        </div>
-                        <div className="service-item-card__actions">
-                          <Button
-                            variant="secondary"
-                            size="small"
-                            onClick={() => setEditingItem({ ...item, categoryId: category.id })}
-                          >
-                            编辑
-                          </Button>
-                          {item.isCustom && (
-                            <Button
-                              variant="danger"
-                              size="small"
-                              onClick={() => setShowDeleteConfirm({
-                                type: 'item',
-                                id: item.id,
-                                categoryId: category.id,
-                                name: item.name
-                              })}
-                            >
-                              删除
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+  const tabItems = [
+    {
+      key: 'services',
+      label: '服务项目',
+      children: (
+        <div style={{ width: '100%', overflow: 'hidden' }}>
+          <div style={{ marginBottom: 24 }}>
+            <Title level={4}>服务项目管理</Title>
+            <Paragraph type="secondary">
+              管理各分类下的服务项目，可以编辑价格、描述或添加新服务。
+            </Paragraph>
           </div>
-        )}
 
-        {/* Categories Tab */}
-        {activeTab === 'categories' && (
-          <div className="service-manager__content">
-            <div className="service-manager__header">
-              <h3>服务分类管理</h3>
-              <Button
-                variant="primary"
+          <Space direction="vertical" style={{ width: '100%' }} size="large">
+            {categories.map((category) => (
+              <Card 
+                key={category.id} 
+                title={category.name}
                 size="small"
-                onClick={() => setEditingCategory({
-                  id: '',
-                  name: '',
-                  order: categories.length + 1,
-                  isCustom: true,
-                  items: {},
-                  createdAt: new Date(),
-                  updatedAt: new Date(),
-                })}
+                extra={
+                  <Button 
+                    type="primary" 
+                    size="small"
+                    icon={<PlusOutlined />}
+                    onClick={() => handleAddNewItem(category.id)}
+                  >
+                    添加服务
+                  </Button>
+                }
               >
-                + 添加分类
+                <Row gutter={[16, 16]}>
+                  {Object.values(category.items).map((item) => (
+                    <Col xs={24} sm={12} lg={8} key={item.id}>
+                      <Card
+                        size="small"
+                        hoverable
+                        actions={[
+                          <EditOutlined 
+                            key="edit" 
+                            onClick={() => handleEditItem(item, category.id)} 
+                          />,
+                          <Popconfirm
+                            key="delete"
+                            title="确认删除"
+                            description="确定要删除这个服务项目吗？"
+                            onConfirm={() => handleDeleteItem(category.id, item.id)}
+                            okText="确定"
+                            cancelText="取消"
+                          >
+                            <DeleteOutlined />
+                          </Popconfirm>
+                        ]}
+                      >
+                        <div style={{ minHeight: 120 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                            <Text strong>{item.name}</Text>
+                            {!item.isCustom && <Tag color="orange">默认</Tag>}
+                          </div>
+                          {item.description && (
+                            <Text type="secondary" style={{ fontSize: '12px', display: 'block', marginBottom: 8 }}>
+                              {item.description}
+                            </Text>
+                          )}
+                          <Text strong style={{ color: '#1890ff', fontSize: '16px' }}>
+                            ¥{item.price.toFixed(2)}
+                          </Text>
+                        </div>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+              </Card>
+            ))}
+          </Space>
+        </div>
+      )
+    },
+    {
+      key: 'categories',
+      label: '服务分类',
+      children: (
+        <div style={{ width: '100%', overflow: 'hidden' }}>
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+              <div style={{ flex: '1', minWidth: 0 }}>
+                <Title level={4}>服务分类管理</Title>
+                <Paragraph type="secondary">
+                  管理服务分类，可以添加新分类或删除不需要的分类。
+                </Paragraph>
+              </div>
+              <Button 
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={handleAddNewCategory}
+                style={{ flexShrink: 0 }}
+              >
+                添加分类
               </Button>
             </div>
-
-            <div className="categories-grid">
-              {categories.map((category) => (
-                <div key={category.id} className="category-card">
-                  <div className="category-card__info">
-                    <h4 className="category-card__name">
-                      {category.name}
-                      {category.isCustom && (
-                        <span className="custom-tag">自定义</span>
-                      )}
-                    </h4>
-                    <p className="category-card__count">
-                      {Object.keys(category.items).length} 个服务项目
-                    </p>
-                  </div>
-                  <div className="category-card__actions">
-                    {category.isCustom && (
-                      <Button
-                        variant="danger"
-                        size="small"
-                        onClick={() => setShowDeleteConfirm({
-                          type: 'category',
-                          id: category.id,
-                          name: category.name
-                        })}
-                      >
-                        删除
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
-        )}
 
-        {/* Data Management Tab */}
-        {activeTab === 'data' && (
-          <div className="service-manager__content">
-            <div className="service-manager__header">
-              <h3>数据管理</h3>
-              <p className="service-manager__description">
-                导入导出服务配置数据，或重置为系统默认配置。
-              </p>
-            </div>
+          <Row gutter={[16, 16]}>
+            {categories.map((category) => (
+              <Col xs={24} sm={12} lg={8} key={category.id}>
+                <Card
+                  size="small"
+                  hoverable
+                  actions={[
+                    <Popconfirm
+                      key="delete"
+                      title="确认删除"
+                      description={`确定要删除"${category.name}"分类吗？这将删除该分类下的所有服务项目。`}
+                      onConfirm={() => handleDeleteCategory(category.id)}
+                      okText="确定"
+                      cancelText="取消"
+                    >
+                      <DeleteOutlined />
+                    </Popconfirm>
+                  ]}
+                >
+                  <div style={{ minHeight: 100 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                      <Text strong style={{ fontSize: '16px' }}>{category.name}</Text>
+                    </div>
+                    <Text type="secondary" style={{ fontSize: '12px' }}>
+                      包含 {Object.keys(category.items).length} 个服务项目
+                    </Text>
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </div>
+      )
+    },
+    {
+      key: 'data',
+      label: '数据管理',
+      children: (
+        <div style={{ width: '100%', overflow: 'hidden' }}>
+          <div style={{ marginBottom: 24 }}>
+            <Title level={4}>数据管理</Title>
+            <Paragraph type="secondary">
+              导入导出服务配置数据，或重置为系统默认配置。
+            </Paragraph>
+          </div>
 
-            <div className="data-management-grid">
-              <div className="data-action-card">
-                <h4>导出数据</h4>
-                <p>将当前的服务配置导出为JSON文件</p>
-                <Button
-                  variant="secondary"
+          <Row gutter={[24, 24]}>
+            <Col xs={24} sm={8}>
+              <Card title="导出数据" size="small">
+                <Paragraph style={{ minHeight: 60 }}>
+                  将当前的服务配置导出为JSON文件，便于备份或分享。
+                </Paragraph>
+                <Button 
+                  type="primary"
+                  icon={<DownloadOutlined />}
                   onClick={handleExportData}
+                  block
                 >
                   导出配置
                 </Button>
-              </div>
+              </Card>
+            </Col>
 
-              <div className="data-action-card">
-                <h4>导入数据</h4>
-                <p>从JSON文件导入服务配置</p>
-                <label className="file-input-wrapper">
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={handleImportData}
-                    disabled={isLoading}
-                    className="file-input"
-                  />
-                  <Button
-                    variant="secondary"
-                    disabled={isLoading}
+            <Col xs={24} sm={8}>
+              <Card title="导入数据" size="small">
+                <Paragraph style={{ minHeight: 60 }}>
+                  从JSON文件导入服务配置，将替换当前所有数据。
+                </Paragraph>
+                <Upload {...uploadProps}>
+                  <Button 
+                    type="default"
+                    icon={<UploadOutlined />}
                     loading={isLoading}
+                    block
                   >
                     选择文件导入
                   </Button>
-                </label>
-              </div>
+                </Upload>
+              </Card>
+            </Col>
 
-              <div className="data-action-card">
-                <h4>重置配置</h4>
-                <p>恢复为系统默认的服务配置</p>
-                <Button
-                  variant="danger"
-                  onClick={handleResetToDefault}
+            <Col xs={24} sm={8}>
+              <Card title="重置数据" size="small">
+                <Paragraph style={{ minHeight: 60 }}>
+                  将所有数据重置为系统默认配置，此操作不可恢复。
+                </Paragraph>
+                <Popconfirm
+                  title="确认重置"
+                  description="这将清除所有自定义数据并恢复默认设置，确定继续吗？"
+                  onConfirm={handleResetToDefault}
+                  okText="确定"
+                  cancelText="取消"
                 >
-                  重置为默认
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+                  <Button 
+                    danger
+                    icon={<ReloadOutlined />}
+                    loading={isLoading}
+                    block
+                  >
+                    重置为默认
+                  </Button>
+                </Popconfirm>
+              </Card>
+            </Col>
+          </Row>
+        </div>
+      )
+    }
+  ]
+
+  return (
+    <>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="服务项目管理"
+        size="xl"
+      >
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={tabItems}
+          style={{ 
+            minHeight: '60vh',
+            width: '100%'
+          }}
+          tabBarStyle={{
+            marginBottom: '16px'
+          }}
+        />
+      </Modal>
 
       {/* Edit Item Modal */}
-      {editingItem && (
-        <Modal
-          isOpen={true}
-          onClose={() => setEditingItem(null)}
-          title={editingItem.id.startsWith('new_') ? '添加服务项目' : '编辑服务项目'}
-          size="medium"
+      <Modal
+        isOpen={!!editingItem}
+        onClose={() => {
+          setEditingItem(null)
+          form.resetFields()
+        }}
+        title={editingItem?.id.startsWith('item-') ? '添加服务项目' : '编辑服务项目'}
+        size="medium"
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSaveItem}
+          style={{ marginTop: 16 }}
         >
-          <div className="edit-form">
-            <Input
-              label="服务名称"
-              type="text"
-              value={editingItem.name}
-              onChange={(value) => setEditingItem({ ...editingItem, name: value })}
-              required
-              fullWidth
-              maxLength={50}
-            />
+          <Form.Item
+            name="name"
+            label="服务名称"
+            rules={[{ required: true, message: '请输入服务名称' }]}
+          >
+            <Input placeholder="请输入服务名称" />
+          </Form.Item>
 
-            <Input
-              label="服务价格"
-              type="number"
-              value={editingItem.price}
-              onChange={(value) => setEditingItem({ ...editingItem, price: parseFloat(value) || 0 })}
-              required
-              fullWidth
+          <Form.Item
+            name="price"
+            label="价格"
+            rules={[{ required: true, message: '请输入价格' }]}
+          >
+            <InputNumber
+              style={{ width: '100%' }}
               min={0}
-              step={0.01}
+              precision={2}
+              formatter={(value) => `¥ ${value || 0}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              parser={(value) => value?.replace(/¥\s?|(,*)/g, '') as any}
+              placeholder="请输入价格"
             />
+          </Form.Item>
 
-            <Input
-              label="服务描述"
-              type="text"
-              value={editingItem.description || ''}
-              onChange={(value) => setEditingItem({ ...editingItem, description: value })}
-              fullWidth
-              maxLength={200}
+          <Form.Item
+            name="description"
+            label="服务描述"
+          >
+            <TextArea 
+              rows={3} 
+              placeholder="请输入服务描述（可选）"
             />
+          </Form.Item>
 
-            <div className="edit-form__actions">
-              <Button
-                variant="secondary"
-                onClick={() => setEditingItem(null)}
-              >
+          <Form.Item style={{ textAlign: 'right', marginBottom: 0 }}>
+            <Space>
+              <Button onClick={() => {
+                setEditingItem(null)
+                form.resetFields()
+              }}>
                 取消
               </Button>
-              <Button
-                variant="primary"
-                onClick={editingItem.id.startsWith('new_') ? handleSaveNewItem : handleSaveItem}
-                disabled={!editingItem.name.trim() || editingItem.price < 0}
-              >
-                保存
+              <Button type="primary" htmlType="submit">
+                {editingItem?.id.startsWith('item-') ? '添加' : '保存'}
               </Button>
-            </div>
-          </div>
-        </Modal>
-      )}
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
 
       {/* Edit Category Modal */}
-      {editingCategory && (
-        <Modal
-          isOpen={true}
-          onClose={() => setEditingCategory(null)}
-          title="添加服务分类"
-          size="small"
+      <Modal
+        isOpen={!!editingCategory}
+        onClose={() => {
+          setEditingCategory(null)
+          categoryForm.resetFields()
+        }}
+        title="添加服务分类"
+        size="medium"
+      >
+        <Form
+          form={categoryForm}
+          layout="vertical"
+          onFinish={handleSaveCategory}
+          style={{ marginTop: 16 }}
         >
-          <div className="edit-form">
-            <Input
-              label="分类名称"
-              type="text"
-              value={editingCategory.name}
-              onChange={(value) => setEditingCategory({ ...editingCategory, name: value })}
-              required
-              fullWidth
-              maxLength={30}
-            />
+          <Form.Item
+            name="name"
+            label="分类名称"
+            rules={[{ required: true, message: '请输入分类名称' }]}
+          >
+            <Input placeholder="请输入分类名称" />
+          </Form.Item>
 
-            <div className="edit-form__actions">
-              <Button
-                variant="secondary"
-                onClick={() => setEditingCategory(null)}
-              >
+          <Form.Item
+            name="description"
+            label="分类描述"
+          >
+            <TextArea 
+              rows={3} 
+              placeholder="请输入分类描述（可选）"
+            />
+          </Form.Item>
+
+          <Form.Item style={{ textAlign: 'right', marginBottom: 0 }}>
+            <Space>
+              <Button onClick={() => {
+                setEditingCategory(null)
+                categoryForm.resetFields()
+              }}>
                 取消
               </Button>
-              <Button
-                variant="primary"
-                onClick={handleSaveCategory}
-                disabled={!editingCategory.name.trim()}
-              >
+              <Button type="primary" htmlType="submit">
                 添加
               </Button>
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <Modal
-          isOpen={true}
-          onClose={() => setShowDeleteConfirm(null)}
-          title="确认删除"
-          size="small"
-        >
-          <div className="delete-confirm">
-            <p>
-              确定要删除{showDeleteConfirm.type === 'item' ? '服务项目' : '服务分类'}「
-              <strong>{showDeleteConfirm.name}</strong>」吗？
-            </p>
-            {showDeleteConfirm.type === 'category' && (
-              <p className="delete-confirm__warning">
-                ⚠️ 删除分类将同时删除该分类下的所有服务项目，此操作不可恢复。
-              </p>
-            )}
-
-            <div className="delete-confirm__actions">
-              <Button
-                variant="secondary"
-                onClick={() => setShowDeleteConfirm(null)}
-              >
-                取消
-              </Button>
-              <Button
-                variant="danger"
-                onClick={showDeleteConfirm.type === 'item' ? handleDeleteItem : handleDeleteCategory}
-              >
-                删除
-              </Button>
-            </div>
-          </div>
-        </Modal>
-      )}
-    </Modal>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
+    </>
   )
 }
 

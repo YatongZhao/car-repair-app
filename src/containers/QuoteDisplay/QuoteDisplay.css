@@ -285,10 +285,16 @@
 
 /* Print Styles */
 @media print {
+  @page {
+    size: A4;
+    margin: 1.5cm 2cm;
+  }
+  
   .quote-display {
     box-shadow: none;
     border-radius: 0;
     padding: 0;
+    background: white;
   }
   
   .print-hide {
@@ -300,22 +306,55 @@
   }
   
   .quote-header {
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #000;
   }
   
   .quote-header__title {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
+    color: #000;
+    font-weight: bold;
   }
   
   .logo-placeholder {
     width: 60px;
     height: 60px;
     font-size: 0.75rem;
+    background: #666 !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
   }
   
-  .service-list__header,
+  .quote-section__title {
+    color: #000;
+    font-weight: bold;
+    border-bottom: 1px solid #000;
+  }
+  
+  .service-list {
+    border: 1px solid #000;
+  }
+  
+  .service-list__header {
+    background-color: #f0f0f0 !important;
+    border-bottom: 1px solid #000;
+    grid-template-columns: 2fr 1fr 1fr;
+    color: #000;
+    font-weight: bold;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+  
   .service-list__item {
     grid-template-columns: 2fr 1fr 1fr;
+    border-bottom: 1px solid #ccc;
+    color: #000;
+  }
+  
+  .service-list__item:last-child {
+    border-bottom: 1px solid #000;
   }
   
   .service-header__actions,
@@ -323,14 +362,80 @@
     display: none;
   }
   
+  .service-item__name {
+    color: #000;
+    font-weight: normal;
+  }
+  
+  .service-item__category {
+    color: #333;
+  }
+  
+  .service-item__price {
+    color: #000;
+    font-weight: bold;
+  }
+  
+  .quote-total {
+    background-color: #f5f5f5 !important;
+    border: 2px solid #000;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+  
+  .quote-total__row {
+    color: #000;
+  }
+  
+  .quote-total__final {
+    border-top: 2px solid #000;
+    font-weight: bold;
+  }
+  
+  .quote-total__amount {
+    color: #000;
+    font-weight: bold;
+  }
+  
   .quote-footer {
     margin-top: 2rem;
     padding-top: 1rem;
+    border-top: 1px solid #000;
+  }
+  
+  .quote-footer__note p {
+    color: #000;
+  }
+  
+  .signature-line {
+    color: #000;
+  }
+  
+  .signature-box {
+    border-bottom: 1px solid #000;
   }
   
   /* Ensure page breaks */
   .quote-section {
     break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  
+  .quote-header {
+    break-inside: avoid;
+  }
+  
+  .quote-footer {
+    break-inside: avoid;
+  }
+  
+  /* Info items */
+  .info-label, .info-value {
+    color: #000;
+  }
+  
+  .quote-header__date {
+    color: #000;
   }
 }
 

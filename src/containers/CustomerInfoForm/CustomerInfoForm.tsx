@@ -1,8 +1,11 @@
 import React from 'react'
+import { Card, Form, Input, Select, Row, Col, Typography } from 'antd'
+import { UserOutlined, PhoneOutlined, CarOutlined } from '@ant-design/icons'
 import { useAppSelector, useAppDispatch } from '../../store/hooks'
 import { updateCustomerInfo, updateCustomField } from '../../store/slices/customerSlice'
-import Input from '../../components/Input'
-import './CustomerInfoForm.css'
+
+const { Title, Text } = Typography
+const { Option } = Select
 
 const CustomerInfoForm: React.FC = () => {
   const dispatch = useAppDispatch()
@@ -20,97 +23,111 @@ const CustomerInfoForm: React.FC = () => {
   const yearOptions = Array.from({ length: 50 }, (_, i) => currentYear - i)
 
   return (
-    <div className="customer-form">
-      <div className="customer-form__header">
-        <h2 className="customer-form__title">客户信息</h2>
-        <p className="customer-form__subtitle">请填写客户和车辆基本信息</p>
-      </div>
+    <Card 
+      title={
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <UserOutlined />
+          <span>客户信息</span>
+        </div>
+      }
+      size="small"
+    >
+      <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
+        请填写客户和车辆基本信息
+      </Text>
 
-      <div className="customer-form__content">
-        <div className="customer-form__section">
-          <h3 className="customer-form__section-title">基本信息</h3>
-          
-          <div className="customer-form__grid">
-            <Input
-              label="客户姓名"
-              type="text"
-              value={customerInfo.name}
-              onChange={(value) => handleBasicFieldChange('name', value)}
-              placeholder="请输入客户姓名"
-              fullWidth
-            />
+      <Form layout="vertical">
+        <Row gutter={16}>
+          <Col xs={24} sm={12}>
+            <Form.Item label="客户姓名" style={{ marginBottom: 16 }}>
+              <Input
+                prefix={<UserOutlined />}
+                value={customerInfo.name}
+                onChange={(e) => handleBasicFieldChange('name', e.target.value)}
+                placeholder="请输入客户姓名"
+              />
+            </Form.Item>
+          </Col>
 
-            <Input
-              label="联系电话"
-              type="tel"
-              value={customerInfo.phone}
-              onChange={(value) => handleBasicFieldChange('phone', value)}
-              placeholder="请输入联系电话"
-              fullWidth
-            />
+          <Col xs={24} sm={12}>
+            <Form.Item label="联系电话" style={{ marginBottom: 16 }}>
+              <Input
+                prefix={<PhoneOutlined />}
+                value={customerInfo.phone}
+                onChange={(e) => handleBasicFieldChange('phone', e.target.value)}
+                placeholder="请输入联系电话"
+              />
+            </Form.Item>
+          </Col>
 
-            <Input
-              label="车辆型号"
-              type="text"
-              value={customerInfo.carModel}
-              onChange={(value) => handleBasicFieldChange('carModel', value)}
-              placeholder="如：奥迪A4L"
-              fullWidth
-            />
+          <Col xs={24} sm={12}>
+            <Form.Item label="车辆型号" style={{ marginBottom: 16 }}>
+              <Input
+                prefix={<CarOutlined />}
+                value={customerInfo.carModel}
+                onChange={(e) => handleBasicFieldChange('carModel', e.target.value)}
+                placeholder="如：奥迪A4L"
+              />
+            </Form.Item>
+          </Col>
 
-            <div className="input-group">
-              <label htmlFor="carYear" className="input-label">
-                车辆年份
-              </label>
-              <select
-                id="carYear"
+          <Col xs={24} sm={12}>
+            <Form.Item label="车辆年份" style={{ marginBottom: 16 }}>
+              <Select
                 value={customerInfo.carYear}
-                onChange={(e) => handleBasicFieldChange('carYear', parseInt(e.target.value))}
-                className="input input--medium"
+                onChange={(value) => handleBasicFieldChange('carYear', value)}
+                placeholder="请选择车辆年份"
+                style={{ width: '100%' }}
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.children?.toString().toLowerCase().indexOf(input.toLowerCase()) ?? -1) >= 0
+                }
               >
                 {yearOptions.map((year) => (
-                  <option key={year} value={year}>
+                  <Option key={year} value={year}>
                     {year}年
-                  </option>
+                  </Option>
                 ))}
-              </select>
-            </div>
+              </Select>
+            </Form.Item>
+          </Col>
 
-            <Input
-              label="车牌号码"
-              type="text"
-              value={customerInfo.licensePlate}
-              onChange={(value) => handleBasicFieldChange('licensePlate', value)}
-              placeholder="如：京A12345"
-              fullWidth
-            />
-          </div>
-        </div>
+          <Col xs={24} sm={12}>
+            <Form.Item label="车牌号码" style={{ marginBottom: 16 }}>
+              <Input
+                value={customerInfo.licensePlate}
+                onChange={(e) => handleBasicFieldChange('licensePlate', e.target.value)}
+                placeholder="如：京A12345"
+                style={{ textTransform: 'uppercase' }}
+              />
+            </Form.Item>
+          </Col>
 
-        {config.customFields.length > 0 && (
-          <div className="customer-form__section">
-            <h3 className="customer-form__section-title">附加信息</h3>
-            
-            <div className="customer-form__grid">
+          {config.customFields.length > 0 && (
+            <>
+              <Col xs={24}>
+                <Title level={5} style={{ marginTop: 16, marginBottom: 16 }}>
+                  附加信息
+                </Title>
+              </Col>
               {config.customFields
                 .sort((a, b) => a.order - b.order)
                 .map((field) => (
-                  <Input
-                    key={field.id}
-                    label={field.name}
-                    type={field.type}
-                    value={customerInfo.customFields[field.id] || ''}
-                    onChange={(value) => handleCustomFieldChange(field.id, value)}
-                    placeholder={field.placeholder}
-                    required={field.required}
-                    fullWidth
-                  />
+                  <Col xs={24} sm={12} key={field.id}>
+                    <Form.Item label={field.name} style={{ marginBottom: 16 }}>
+                      <Input
+                        value={customerInfo.customFields[field.id] || ''}
+                        onChange={(e) => handleCustomFieldChange(field.id, e.target.value)}
+                        placeholder={field.placeholder}
+                      />
+                    </Form.Item>
+                  </Col>
                 ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+            </>
+          )}
+        </Row>
+      </Form>
+    </Card>
   )
 }
 

@@ -1,9 +1,9 @@
 import React from 'react'
-import './Input.css'
+import { Input as AntInput, Form } from 'antd'
+import type { InputProps as AntInputProps } from 'antd'
 
 interface InputProps {
   id?: string
-  name?: string
   type?: 'text' | 'number' | 'email' | 'tel' | 'date' | 'password'
   value: string | number
   onChange: (value: string) => void
@@ -24,7 +24,6 @@ interface InputProps {
 
 const Input: React.FC<InputProps> = ({
   id,
-  name,
   type = 'text',
   value,
   onChange,
@@ -33,7 +32,7 @@ const Input: React.FC<InputProps> = ({
   error,
   disabled = false,
   required = false,
-  fullWidth = false,
+  fullWidth = true,
   size = 'medium',
   className = '',
   autoFocus = false,
@@ -42,53 +41,59 @@ const Input: React.FC<InputProps> = ({
   max,
   step,
 }) => {
-  const inputId = id || name || `input-${Math.random().toString(36).substr(2, 9)}`
-  
-  const inputClass = [
-    'input',
-    `input--${size}`,
-    fullWidth && 'input--full-width',
-    error && 'input--error',
-    disabled && 'input--disabled',
-    className,
-  ].filter(Boolean).join(' ')
+  // Map custom size to Ant Design size
+  const getAntInputSize = (): AntInputProps['size'] => {
+    switch (size) {
+      case 'small':
+        return 'small'
+      case 'medium':
+        return 'middle'
+      case 'large':
+        return 'large'
+      default:
+        return 'middle'
+    }
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value)
   }
 
+  const inputProps: AntInputProps = {
+    id,
+    value: String(value),
+    onChange: handleChange,
+    placeholder,
+    disabled,
+    size: getAntInputSize(),
+    className,
+    autoFocus,
+    maxLength,
+    ...(type === 'number' && { 
+      type: 'number',
+      min,
+      max,
+      step,
+    }),
+    ...(type !== 'number' && { type }),
+  }
+
+  const inputElement = type === 'password' ? (
+    <AntInput.Password {...inputProps} />
+  ) : (
+    <AntInput {...inputProps} />
+  )
+
   return (
-    <div className="input-group">
-      {label && (
-        <label htmlFor={inputId} className="input-label">
-          {label}
-          {required && <span className="input-label__required">*</span>}
-        </label>
-      )}
-      
-      <input
-        id={inputId}
-        name={name}
-        type={type}
-        value={value}
-        onChange={handleChange}
-        placeholder={placeholder}
-        disabled={disabled}
-        required={required}
-        autoFocus={autoFocus}
-        maxLength={maxLength}
-        min={min}
-        max={max}
-        step={step}
-        className={inputClass}
-      />
-      
-      {error && (
-        <div className="input-error">
-          {error}
-        </div>
-      )}
-    </div>
+    <Form.Item
+      label={label}
+      required={required}
+      validateStatus={error ? 'error' : ''}
+      help={error}
+      style={{ marginBottom: '16px', width: fullWidth ? '100%' : 'auto' }}
+    >
+      {inputElement}
+    </Form.Item>
   )
 }
 

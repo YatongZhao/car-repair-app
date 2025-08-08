@@ -21,7 +21,110 @@ const QuoteDisplay: React.FC = () => {
   }
 
   const handlePrint = () => {
-    window.print()
+    // Get the quote content element
+    const quoteContent = document.querySelector('.quote-display__content')
+    if (!quoteContent) return
+
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank', 'width=800,height=600')
+    if (!printWindow) return
+
+    // Get all stylesheets from the current page
+    const stylesheets = Array.from(document.styleSheets)
+      .map(styleSheet => {
+        try {
+          return Array.from(styleSheet.cssRules)
+            .map(rule => rule.cssText)
+            .join('\n')
+        } catch (e) {
+          // Handle CORS issues with external stylesheets
+          return ''
+        }
+      })
+      .join('\n')
+
+    // Create the print document content
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="zh-CN">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>维修服务报价单</title>
+        <style>
+          ${stylesheets}
+          
+          /* Additional print-specific styles */
+          @media print {
+            @page {
+              size: A4;
+              margin: 1cm;
+            }
+            
+            body {
+              font-family: 'Microsoft YaHei', 'SimSun', sans-serif;
+              line-height: 1.4;
+              color: #000;
+              background: white;
+            }
+            
+            .print-hide {
+              display: none !important;
+            }
+            
+            .quote-section {
+              break-inside: avoid;
+              page-break-inside: avoid;
+            }
+            
+            .service-list {
+              border-collapse: collapse;
+            }
+            
+            .quote-total {
+              border: 2px solid #000;
+              background: #f9f9f9 !important;
+            }
+            
+            .quote-total__final {
+              font-weight: bold;
+            }
+            
+            .logo-placeholder {
+              background: #666 !important;
+              -webkit-print-color-adjust: exact;
+              color-adjust: exact;
+            }
+          }
+          
+          /* General styles for print window */
+          body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Microsoft YaHei', 'SimSun', sans-serif;
+            line-height: 1.4;
+          }
+          
+          .print-hide {
+            display: none;
+          }
+        </style>
+      </head>
+      <body>
+        ${quoteContent.outerHTML}
+        <script>
+          window.onload = function() {
+            window.print();
+            window.onafterprint = function() {
+              window.close();
+            };
+          }
+        </script>
+      </body>
+      </html>
+    `)
+
+    printWindow.document.close()
   }
 
   const formatPrice = (price: number) => {
