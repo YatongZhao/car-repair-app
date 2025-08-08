@@ -9,11 +9,25 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 1.5rem 0;
-  text-align: center;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
   z-index: 100;
+}
+
+.app-header__content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+}
+
+.app-header__title {
+  text-align: left;
+  flex: 1;
 }
 
 .app-header h1 {
@@ -27,6 +41,25 @@
   font-size: 1rem;
   opacity: 0.9;
   font-weight: 400;
+}
+
+.app-header__actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.header-button {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: white !important;
+  backdrop-filter: blur(10px);
+}
+
+.header-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  transform: translateY(-1px);
 }
 
 .app-main {
@@ -96,6 +129,16 @@
 @media (max-width: 768px) {
   .app-header {
     padding: 1rem 0;
+  }
+  
+  .app-header__content {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .app-header__title {
+    text-align: center;
   }
   
   .app-header h1 {

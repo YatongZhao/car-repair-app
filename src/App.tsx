@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from './store/hooks'
 import { setServiceDatabase } from './store/slices/serviceSlice'
 import { setCustomerConfig } from './store/slices/customerSlice'
-import { setLoading } from './store/slices/uiSlice'
+import { setLoading, toggleServiceManager } from './store/slices/uiSlice'
 import { checkBrowserSupport, showUnsupportedBrowserMessage } from './utils/browserSupport'
 import { dbManager } from './utils/indexedDB'
 import { defaultServices } from './data/defaultServices'
@@ -10,12 +10,14 @@ import { defaultCustomerFields } from './data/defaultCustomerFields'
 import CustomerInfoForm from './containers/CustomerInfoForm'
 import ServiceSelection from './containers/ServiceSelection'
 import QuoteDisplay from './containers/QuoteDisplay'
+import ServiceManager from './components/ServiceManager'
+import Button from './components/Button'
 import Loading from './components/Loading'
 import './styles/App.css'
 
 function App() {
   const dispatch = useAppDispatch()
-  const { isLoading } = useAppSelector((state) => state.ui)
+  const { isLoading, showServiceManager } = useAppSelector((state) => state.ui)
   const [isInitialized, setIsInitialized] = useState(false)
 
   useEffect(() => {
@@ -99,8 +101,22 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>汽车修理厂报价系统</h1>
-        <p className="app-header__subtitle">专业、高效、透明的维修报价服务</p>
+        <div className="app-header__content">
+          <div className="app-header__title">
+            <h1>汽车修理厂报价系统</h1>
+            <p className="app-header__subtitle">专业、高效、透明的维修报价服务</p>
+          </div>
+          <div className="app-header__actions">
+            <Button
+              variant="secondary"
+              size="small"
+              onClick={() => dispatch(toggleServiceManager())}
+              className="header-button"
+            >
+              ⚙️ 服务管理
+            </Button>
+          </div>
+        </div>
       </header>
       
       <main className="app-main">
@@ -116,6 +132,12 @@ function App() {
           </div>
         </div>
       </main>
+
+      {/* Service Manager Modal */}
+      <ServiceManager
+        isOpen={showServiceManager}
+        onClose={() => dispatch(toggleServiceManager())}
+      />
     </div>
   )
 }

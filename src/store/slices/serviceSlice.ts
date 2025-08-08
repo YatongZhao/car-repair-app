@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { ServiceDatabase, SelectedService, ServiceConfig } from '../../types/service'
+import { ServiceDatabase, SelectedService, ServiceConfig, ServiceItem, ServiceCategory } from '../../types/service'
 
 interface ServiceState {
   selectedServices: SelectedService[]
@@ -53,6 +53,61 @@ const serviceSlice = createSlice({
     setServiceConfig: (state, action: PayloadAction<Partial<ServiceConfig>>) => {
       state.config = { ...state.config, ...action.payload }
     },
+    // Service Management Actions
+    updateServiceItem: (
+      state, 
+      action: PayloadAction<{ categoryId: string; itemId: string; updates: Partial<ServiceItem> }>
+    ) => {
+      const { categoryId, itemId, updates } = action.payload
+      if (state.serviceDatabase[categoryId]?.items[itemId]) {
+        state.serviceDatabase[categoryId].items[itemId] = {
+          ...state.serviceDatabase[categoryId].items[itemId],
+          ...updates,
+          updatedAt: new Date(),
+        }
+      }
+    },
+    addServiceCategory: (state, action: PayloadAction<ServiceCategory>) => {
+      const category = action.payload
+      state.serviceDatabase[category.id] = category
+    },
+    removeServiceCategory: (state, action: PayloadAction<string>) => {
+      const categoryId = action.payload
+      delete state.serviceDatabase[categoryId]
+      // Remove any selected services from this category
+      state.selectedServices = state.selectedServices.filter(
+        service => service.id.indexOf(categoryId) !== 0
+      )
+      // Recalculate total
+      state.totalAmount = state.selectedServices.reduce((sum, service) => sum + service.price, 0)
+    },
+    addServiceItem: (
+      state, 
+      action: PayloadAction<{ categoryId: string; item: ServiceItem }>
+    ) => {
+      const { categoryId, item } = action.payload
+      if (state.serviceDatabase[categoryId]) {
+        state.serviceDatabase[categoryId].items[item.id] = item
+      }
+    },
+    removeServiceItem: (
+      state, 
+      action: PayloadAction<{ categoryId: string; itemId: string }>
+    ) => {
+      const { categoryId, itemId } = action.payload
+      if (state.serviceDatabase[categoryId]?.items[itemId]) {
+        delete state.serviceDatabase[categoryId].items[itemId]
+      }
+      // Remove from selected services if it exists
+      state.selectedServices = state.selectedServices.filter(service => service.id !== itemId)
+      // Recalculate total
+      state.totalAmount = state.selectedServices.reduce((sum, service) => sum + service.price, 0)
+    },
+    resetToDefaultServices: (state, action: PayloadAction<ServiceDatabase>) => {
+      state.serviceDatabase = action.payload
+      state.selectedServices = []
+      state.totalAmount = 0
+    },
   },
 })
 
@@ -62,6 +117,12 @@ export const {
   clearAllServices,
   setServiceDatabase,
   setServiceConfig,
+  updateServiceItem,
+  addServiceCategory,
+  removeServiceCategory,
+  addServiceItem,
+  removeServiceItem,
+  resetToDefaultServices,
 } = serviceSlice.actions
 
 export default serviceSlice.reducer
